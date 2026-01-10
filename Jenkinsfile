@@ -50,7 +50,6 @@ pipeline {
             steps {
                 script {
                     echo "Building jar file..."
-                    // gv.buildJarFile()
                     buildGradleBootJarWithdot()
                 }
             }
@@ -60,7 +59,6 @@ pipeline {
             steps {
                 script {
                     echo 'Building the application...'
-                   // gv.buildDockerImage()
                     echo 'Building Docker image...'
                     buildImage(env.IMAGE_NAME)
                     dockerLogin()
@@ -69,11 +67,24 @@ pipeline {
             }
         }
 
-        stage("deployDockerImage") {
+        stage("deployImageToAWS") {
+            environment {
+                AWS_ACCESS_KEY_ID = credentials('jenkins_aws_access_key_id')
+                AWS_SECRET_ACCESS_KEY = credentials('jenkins_aws_secret_access_key')
+            }
             steps {
                 script{
-                    echo 'Deploying the application...'
-                   // gv.deployApp()
+                   echo 'Deploying the application...'
+//                    sh 'aws sts get-caller-identity'
+//                    sh 'aws configure list'
+
+                   sh 'envsubst < Kubernetes/deployment.yaml | kubectl apply -f -'
+                   sh 'envsubst < Kubernetes/service.yaml | kubectl apply -f -'
+//                    sh 'kubectl config get-contexts'
+//                    sh 'kubectl config current-context'
+//                    sh 'kubectl cluster-info'
+//                    sh 'kubectl create deployment nginx-deployment --image=nginx'
+
                 }
             }
         }
